@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS users (
     photo_url TEXT,
     phone_number VARCHAR(20),
     provider_id VARCHAR(50),
+    disabled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_sign_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `
