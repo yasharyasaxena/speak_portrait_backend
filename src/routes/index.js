@@ -1,12 +1,12 @@
 const express = require('express');
 const authRoutes = require('./auth');
+const uploadRoutes = require('./upload');
 
 const router = express.Router();
 
-// API routes
 router.use('/auth', authRoutes);
+router.use('/upload', uploadRoutes);
 
-// Health check endpoint
 router.get('/health', (req, res) => {
     res.json({
         success: true,

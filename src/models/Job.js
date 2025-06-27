@@ -2,9 +2,9 @@ const JobSchema = `
 CREATE TABLE IF NOT EXISTS jobs (
     job_id SERIAL PRIMARY KEY,
     uid VARCHAR(128) NOT NULL,
-    image_url TEXT NOT NULL,
-    audio_url TEXT NOT NULL,
-    video_url TEXT NOT NULL,
+    image_url TEXT,
+    audio_url TEXT,
+    video_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uid) REFERENCES users(uid) ON DELETE CASCADE
