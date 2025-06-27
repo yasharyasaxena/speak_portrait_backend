@@ -1,5 +1,3 @@
-const { pool } = require('../db');
-
 const JobSchema = `
 CREATE TABLE IF NOT EXISTS jobs (
     job_id SERIAL PRIMARY KEY,
@@ -8,12 +6,12 @@ CREATE TABLE IF NOT EXISTS jobs (
     audio_url TEXT NOT NULL,
     video_url TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uid) REFERENCES users(uid) ON DELETE CASCADE
 );
 `;
 
-const createJobTable = async () => {
+const createJobTable = async (pool) => {
     try {
         await pool.query(JobSchema);
         console.log("Job table created successfully.");

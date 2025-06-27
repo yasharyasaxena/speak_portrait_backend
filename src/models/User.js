@@ -1,5 +1,3 @@
-const { pool } = require('../db.js');
-
 const UserSchema = `
 CREATE TABLE IF NOT EXISTS users (
     uid VARCHAR(128) PRIMARY KEY,
@@ -10,11 +8,11 @@ CREATE TABLE IF NOT EXISTS users (
     phone_number VARCHAR(20),
     provider_id VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `
 
-const createUserTable = async () => {
+const createUserTable = async (pool) => {
     try {
         await pool.query(UserSchema);
         console.log("User table created successfully.");

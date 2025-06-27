@@ -9,4 +9,4 @@ app.use(express.json());
 
 initDB();
 
-export default app;
+module.exports = app;

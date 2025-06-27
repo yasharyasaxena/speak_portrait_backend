@@ -7,7 +7,7 @@ const pool = new pg.Pool({
     user: config.db.user,
     host: config.db.host,
     database: config.db.database,
-    password: config.db.password,
+    password: String(config.db.password),
     port: config.db.port,
 });
 
@@ -29,8 +29,8 @@ const connectDB = async () => {
 const initDB = async () => {
     try {
         await connectDB();
-        await createUserTable();
-        await createJobTable();
+        await createUserTable(pool);
+        await createJobTable(pool);
     } catch (err) {
         console.error('Error during database initialization:', err);
     }
