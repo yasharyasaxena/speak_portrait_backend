@@ -1,7 +1,7 @@
 const pg = require('pg');
 const config = require('./env');
 const { createUserTable } = require('../models/User');
-const { createJobTable } = require('../models/Job');
+const { createProjectTable } = require('../models/Project');
 
 const pool = new pg.Pool({
     user: config.db.user,
@@ -30,7 +30,7 @@ const initDB = async () => {
     try {
         await connectDB();
         await createUserTable(pool);
-        await createJobTable(pool);
+        await createProjectTable(pool);
     } catch (err) {
         console.error('Error during database initialization:', err);
     }
