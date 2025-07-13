@@ -1,3 +1,4 @@
+const { getUserById } = require('../services/userServices');
 const { syncUserToDatabase, getFirebaseUser } = require('../config/firebase');
 
 const syncUser = async (req, res) => {
@@ -45,15 +46,29 @@ const syncUser = async (req, res) => {
 
 const getUserProfile = async (req, res) => {
     try {
-        const { uid, email, name, picture } = req.user;
+        const { uid } = req.user;
+
+        if (!uid) {
+            return res.status(400).json({
+                success: false,
+                message: 'User UID is required'
+            });
+        }
+        const user = await getUserById(uid);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
 
         res.json({
             success: true,
             user: {
                 uid,
-                email,
-                name,
-                picture
+                email: user.email,
+                name: user.displayName,
+                picture: user.photoURL
             }
         });
     } catch (error) {
