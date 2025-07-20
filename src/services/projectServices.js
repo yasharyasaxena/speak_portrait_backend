@@ -1,40 +1,48 @@
-const { pool } = require('../config/db');
+const { prisma } = require('../config/prisma');
 
-const createProject = async ({ userId, imageUrl = null, audioUrl = null, videoUrl = null }) => {
-    const query = 'INSERT INTO projects (uid, image_url, audio_url, video_url) VALUES ($1, $2, $3, $4) RETURNING *';
-    const values = [userId, imageUrl, audioUrl, videoUrl];
-
+const getUserProjects = async (userId) => {
     try {
-        const result = await pool.query(query, values);
-        return result.rows[0];
+        const projects = await prisma.project.findMany({
+            where: { uid: userId },
+        });
+        return projects;
+    } catch (error) {
+        console.error('Error fetching user projects:', error);
+        throw error;
+    }
+}
+
+const createProject = async (data) => {
+    const { projectId = "", userId, name = "", media: [{ url = "", fileName = "", metadata = {} }] } = data;
+    try {
+        const project = await prisma.project.create({
+            data: {
+                ...(projectId ? { id: projectId } : {}),
+                userId,
+                name,
+                media: {
+                    create: {
+                        url,
+                        fileName,
+                        metadata,
+                    },
+                },
+            },
+        });
+        return project;
     } catch (error) {
         console.error('Error creating project:', error);
         throw error;
     }
 }
 
-const getProjectById = async (projectId) => {
-    const query = 'SELECT * FROM projects WHERE project_id = $1';
-    const values = [projectId];
-
+const updateProject = async (projectId, data) => {
     try {
-        const result = await pool.query(query, values);
-        return result.rows[0];
-    } catch (error) {
-        console.error('Error fetching project:', error);
-        throw error;
-    }
-}
-
-const updateProject = async (projectId, updates) => {
-    const fields = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
-    const values = [projectId, ...Object.values(updates)];
-
-    const query = `UPDATE projects SET ${fields} WHERE project_id = $1 RETURNING *`;
-
-    try {
-        const result = await pool.query(query, values);
-        return result.rows[0];
+        const updatedProject = await prisma.project.update({
+            where: { id: projectId },
+            data,
+        });
+        return updatedProject;
     } catch (error) {
         console.error('Error updating project:', error);
         throw error;
@@ -42,12 +50,10 @@ const updateProject = async (projectId, updates) => {
 }
 
 const deleteProject = async (projectId) => {
-    const query = 'DELETE FROM projects WHERE project_id = $1 RETURNING *';
-    const values = [projectId];
-
     try {
-        const result = await pool.query(query, values);
-        return result.rows[0];
+        await prisma.project.delete({
+            where: { id: projectId },
+        });
     } catch (error) {
         console.error('Error deleting project:', error);
         throw error;
@@ -56,7 +62,7 @@ const deleteProject = async (projectId) => {
 
 module.exports = {
     createProject,
-    getProjectById,
     updateProject,
+    getUserProjects,
     deleteProject
 };

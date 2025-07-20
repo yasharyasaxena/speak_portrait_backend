@@ -1,53 +1,46 @@
-const { createProject, getProjectById, updateProject } = require('../services/projectServices');
+const { uploadToS3 } = require('../services/awsService');
+const { v4: uuidv4 } = require('uuid');
+const { createProject } = require('../services/projectServices');
 
-const uploadImage = async (req, res) => {
+const uploadHandler = async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No image uploaded' });
+        const userId = req.user?.uid;
+        if (!userId) {
+            return res.status(400).send('User ID is required');
         }
-        const imageUrl = 'C:/Users/HP/Documents/speak_portrait_backend/temp/uploads/' + req.file.filename;
-        const projectId = req.body.projectId;
-        const userId = req.body.userId;
-        const project = projectId ? await getProjectById(projectId) : null;
-        if (!project) {
-            const newProject = await createProject({ userId: userId, imageUrl: imageUrl });
-            res.status(200).json({ success: true, message: 'Image uploaded successfully', imageUrl: imageUrl, projectId: newProject.project_id });
+        const files = req.files;
+        if (!files || Object.keys(files).length === 0) {
+            return res.status(400).send('No files were uploaded.');
         }
-        else {
-            const updatedProject = await updateProject(projectId, { image_url: imageUrl });
-            res.status(200).json({ success: true, message: 'Image uploaded successfully', imageUrl: imageUrl });
+        const projectId = uuidv4();
+        const bucketName = process.env.AWS_S3_BUCKET_NAME;
+        const uploadedFiles = [];
+        for (const [fieldname, fileArray] of Object.entries(files)) {
+            for (const file of fileArray) {
+                const key = `${userId}/${projectId}/${file.originalname}`;
+                const data = await uploadToS3(bucketName, key, file.buffer);
+                uploadedFiles.push({ fieldname, url: data.Location, metadata: data.size, filename: file.originalname });
+            }
         }
 
+        const projectData = {
+            projectId,
+            name: req.body.projectName || 'New Project',
+            userId: userId,
+            media: uploadedFiles.map(file => ({
+                url: file.url,
+                fileName: file.filename,
+                metadata: file.metadata
+            }))
+        };
+
+        await createProject(projectData);
+
+        res.status(200).json({ message: 'Files uploaded successfully', files: uploadedFiles, projectId });
     } catch (error) {
-        console.error('Image upload error:', error);
-        res.status(500).json({ success: false, message: 'Image upload failed', error: error.message });
+        console.error('Error uploading files:', error);
+        res.status(500).send('Error uploading files');
     }
 };
 
-const uploadAudio = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No audio uploaded' });
-        }
-        const audioUrl = 'C:/Users/HP/Documents/speak_portrait_backend/temp/uploads/' + req.file.filename;
-        const projectId = req.body.projectId;
-        const userId = req.body.userId;
-        const project = projectId ? await getProjectById(projectId) : null;
-        if (!project) {
-            const newProject = await createProject({ userId: userId, audioUrl: audioUrl });
-            res.status(200).json({ success: true, message: 'Audio uploaded successfully', audioUrl: audioUrl, projectId: newProject.project_id });
-        }
-        else {
-            const updatedProject = await updateProject(projectId, { audio_url: audioUrl });
-            res.status(200).json({ success: true, message: 'Audio uploaded successfully', audioUrl: audioUrl });
-        }
-    } catch (error) {
-        console.error('Audio upload error:', error);
-        res.status(500).json({ success: false, message: 'Audio upload failed', error: error.message });
-    }
-};
-
-module.exports = {
-    uploadImage,
-    uploadAudio
-};
+module.exports = { uploadHandler };

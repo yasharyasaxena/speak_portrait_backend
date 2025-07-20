@@ -1,11 +1,14 @@
 const express = require('express');
 const authRoutes = require('./auth');
 const uploadRoutes = require('./upload');
+const projectRoutes = require('./project');
+const { authenticateUser } = require('src/middleware/auth');
 
 const router = express.Router();
 
 router.use('/auth', authRoutes);
-router.use('/upload', uploadRoutes);
+router.use('/upload', authenticateUser, uploadRoutes);
+router.use('/projects', authenticateUser, projectRoutes);
 
 router.get('/health', (req, res) => {
     res.json({
