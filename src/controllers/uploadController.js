@@ -1,6 +1,6 @@
 const { uploadToS3 } = require('../services/awsService');
 const { v4: uuidv4 } = require('uuid');
-const { createProject } = require('../services/projectServices');
+const { createProject, getProjectById, updateProject } = require('../services/projectServices');
 
 const uploadHandler = async (req, res) => {
     try {
@@ -8,11 +8,14 @@ const uploadHandler = async (req, res) => {
         if (!userId) {
             return res.status(400).send('User ID is required');
         }
+        const projectId = req.body.projectId;
+        if (!projectId) {
+            projectId = uuidv4();
+        }
         const files = req.files;
         if (!files || Object.keys(files).length === 0) {
             return res.status(400).send('No files were uploaded.');
         }
-        const projectId = uuidv4();
         const bucketName = process.env.AWS_S3_BUCKET_NAME;
         const uploadedFiles = [];
         for (const [fieldname, fileArray] of Object.entries(files)) {
@@ -34,9 +37,15 @@ const uploadHandler = async (req, res) => {
             }))
         };
 
-        await createProject(projectData);
-
+        const project = await getProjectById(projectId);
+        if (!project) {
+            await createProject(projectData);
+        }
+        else {
+            await updateProject(projectData)
+        }
         res.status(200).json({ message: 'Files uploaded successfully', files: uploadedFiles, projectId });
+
     } catch (error) {
         console.error('Error uploading files:', error);
         res.status(500).send('Error uploading files');

@@ -60,9 +60,21 @@ const deleteProject = async (projectId) => {
     }
 }
 
+const getProjectById = async (projectId) => {
+    try {
+        await prisma.project.findUnique({
+            where: { id: projectId }
+        })
+    } catch (error) {
+        console.error('Error fetching projects:', error)
+        throw error;
+    }
+}
+
 module.exports = {
     createProject,
     updateProject,
     getUserProjects,
-    deleteProject
+    deleteProject,
+    getProjectById
 };

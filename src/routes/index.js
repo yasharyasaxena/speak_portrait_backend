@@ -2,7 +2,7 @@ const express = require('express');
 const authRoutes = require('./auth');
 const uploadRoutes = require('./upload');
 const projectRoutes = require('./project');
-const { authenticateUser } = require('src/middleware/auth');
+const { authenticateUser } = require('../middleware/auth.js');
 
 const router = express.Router();
 
