@@ -13,7 +13,7 @@ const getUserProjects = async (userId) => {
 }
 
 const createProject = async (data) => {
-    const { projectId = "", userId, name = "", media: [{ url = "", fileName = "", metadata = {} }] } = data;
+    const { projectId = "", userId, name = "", media: [{ url = "", fileName = "", metadata = {}, fileType = "" }] } = data;
     try {
         const project = await prisma.project.create({
             data: {
@@ -25,6 +25,7 @@ const createProject = async (data) => {
                         url,
                         fileName,
                         metadata,
+                        fileType: fileType.toUpperCase(),
                     },
                 },
             },
@@ -40,7 +41,7 @@ const updateProject = async (projectId, data) => {
     try {
         const updatedProject = await prisma.project.update({
             where: { id: projectId },
-            data,
+            data
         });
         return updatedProject;
     } catch (error) {
@@ -61,10 +62,14 @@ const deleteProject = async (projectId) => {
 }
 
 const getProjectById = async (projectId) => {
+    if (!projectId) {
+        return null;
+    }
     try {
-        await prisma.project.findUnique({
+        const project = await prisma.project.findUnique({
             where: { id: projectId }
         })
+        return project;
     } catch (error) {
         console.error('Error fetching projects:', error)
         throw error;

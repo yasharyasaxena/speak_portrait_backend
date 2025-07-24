@@ -8,7 +8,7 @@ const uploadHandler = async (req, res) => {
         if (!userId) {
             return res.status(400).send('User ID is required');
         }
-        const projectId = req.body.projectId;
+        var projectId = req.body.projectId;
         if (!projectId) {
             projectId = uuidv4();
         }
@@ -20,29 +20,35 @@ const uploadHandler = async (req, res) => {
         const uploadedFiles = [];
         for (const [fieldname, fileArray] of Object.entries(files)) {
             for (const file of fileArray) {
-                const key = `${userId}/${projectId}/${file.originalname}`;
+                const key = `${userId}/${projectId}/${file.fieldname}/${file.originalname}`;
                 const data = await uploadToS3(bucketName, key, file.buffer);
                 uploadedFiles.push({ fieldname, url: data.Location, metadata: data.size, filename: file.originalname });
             }
         }
 
         const projectData = {
-            projectId,
+            projectId: projectId,
             name: req.body.projectName || 'New Project',
             userId: userId,
             media: uploadedFiles.map(file => ({
                 url: file.url,
                 fileName: file.filename,
-                metadata: file.metadata
+                metadata: file.metadata,
+                fileType: file.fieldname.toUpperCase()
             }))
         };
-
         const project = await getProjectById(projectId);
         if (!project) {
             await createProject(projectData);
         }
         else {
-            await updateProject(projectData)
+            const updateData = {
+                name: projectData.name,
+                media: {
+                    create: projectData.media
+                }
+            };
+            await updateProject(projectId, updateData);
         }
         res.status(200).json({ message: 'Files uploaded successfully', files: uploadedFiles, projectId });
 
