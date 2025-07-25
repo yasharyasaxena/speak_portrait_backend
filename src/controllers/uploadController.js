@@ -42,9 +42,17 @@ const uploadHandler = async (req, res) => {
             await createProject(projectData);
         }
         else {
+            // const existingMedia = project.media;
+            // const uploadedFileTypes = uploadedFiles.map(file => file.fieldname.toUpperCase());
+
+            // const mediaToDelete = existingMedia.filter(media =>
+            //     uploadedFileTypes.includes(media.fileType)
+            // );
+
             const updateData = {
                 name: projectData.name,
                 media: {
+                    // delete: mediaToDelete.map(media => ({ id: media.id })),
                     create: projectData.media
                 }
             };

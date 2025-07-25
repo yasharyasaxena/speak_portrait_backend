@@ -3,7 +3,10 @@ const { prisma } = require('../config/prisma');
 const getUserProjects = async (userId) => {
     try {
         const projects = await prisma.project.findMany({
-            where: { uid: userId },
+            where: { userId: userId },
+            include: {
+                media: true,
+            },
         });
         return projects;
     } catch (error) {
@@ -67,11 +70,14 @@ const getProjectById = async (projectId) => {
     }
     try {
         const project = await prisma.project.findUnique({
-            where: { id: projectId }
-        })
+            where: { id: projectId },
+            include: {
+                media: true,
+            },
+        });
         return project;
     } catch (error) {
-        console.error('Error fetching projects:', error)
+        console.error('Error fetching projects:', error);
         throw error;
     }
 }
