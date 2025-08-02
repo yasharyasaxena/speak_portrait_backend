@@ -16,7 +16,7 @@ const getUserProjects = async (userId) => {
 }
 
 const createProject = async (data) => {
-    const { projectId = "", userId, name = "", media: [{ url = "", fileName = "", metadata = {}, fileType = "" }] } = data;
+    const { projectId = "", userId, name = "", media = [] } = data;
     try {
         const project = await prisma.project.create({
             data: {
@@ -24,12 +24,12 @@ const createProject = async (data) => {
                 userId,
                 name,
                 media: {
-                    create: {
-                        url,
-                        fileName,
-                        metadata,
-                        fileType: fileType.toUpperCase(),
-                    },
+                    create: media.map(mediaItem => ({
+                        url: mediaItem.url,
+                        fileName: mediaItem.fileName,
+                        metadata: mediaItem.metadata,
+                        fileType: mediaItem.fileType.toUpperCase(),
+                    })),
                 },
             },
         });
@@ -43,18 +43,20 @@ const createProject = async (data) => {
 const updateProject = async (projectId, data) => {
     try {
         const { media, ...projectData } = data;
+
+        // Handle media updates
+        const updateData = {
+            ...projectData
+        };
+
+        // If media is provided, add it to update data
+        if (media) {
+            updateData.media = media;
+        }
+
         const updatedProject = await prisma.project.update({
             where: { id: projectId },
-            data: {
-                ...projectData,
-                media: {
-                    upsert: media.map(item => ({
-                        where: { id: item.id },
-                        create: item,
-                        update: item
-                    }))
-                }
-            }
+            data: updateData
         });
         return updatedProject;
     } catch (error) {

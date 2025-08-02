@@ -42,17 +42,21 @@ const uploadHandler = async (req, res) => {
             await createProject(projectData);
         }
         else {
-            // const existingMedia = project.media;
-            // const uploadedFileTypes = uploadedFiles.map(file => file.fieldname.toUpperCase());
+            // Find existing media with the same fileType as newly uploaded files
+            const existingMedia = project.media;
+            const uploadedFileTypes = uploadedFiles.map(file => file.fieldname.toUpperCase());
 
-            // const mediaToDelete = existingMedia.filter(media =>
-            //     uploadedFileTypes.includes(media.fileType)
-            // );
+            // Get existing media that matches the uploaded file types (to be deleted)
+            const mediaToDelete = existingMedia.filter(media =>
+                uploadedFileTypes.includes(media.fileType)
+            );
 
             const updateData = {
                 name: projectData.name,
                 media: {
-                    // delete: mediaToDelete.map(media => ({ id: media.id })),
+                    // Delete existing media with same fileType
+                    delete: mediaToDelete.map(media => ({ id: media.id })),
+                    // Create new media
                     create: projectData.media
                 }
             };
