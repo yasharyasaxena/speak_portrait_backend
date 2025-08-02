@@ -1,5 +1,5 @@
 const { prisma } = require('../config/prisma');
-const { listObjectsInS3, deleteFromS3 } = require('../services/awsService');
+const { listObjectsInS3, deleteFromS3, copyToS3 } = require('../services/awsService');
 const { createProject, updateProject, deleteProject, getProjectById, getUserProjects } = require('../services/projectServices');
 
 const getActiveProjectsHandler = async (req, res) => {
@@ -115,6 +115,62 @@ const deleteProjectHandler = async (req, res) => {
     }
 }
 
+const deleteObjectUsingKey = async (req, res) => {
+    try {
+        const key = req.params.key;
+        const bucketName = process.env.AWS_S3_BUCKET_NAME;
+        const data = await deleteFromS3(bucketName, key);
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error deleting object using key:', error);
+        res.status(500).send('Error deleting object using key');
+    }
+}
+
+const copyToKeyHandler = async (req, res) => {
+    try {
+        const { sourceKey, destinationKey } = req.body;
+        const bucketName = process.env.AWS_S3_BUCKET_NAME;
+        const data = await copyToS3(bucketName, sourceKey, bucketName, destinationKey);
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error copying object:', error);
+        res.status(500).send('Error copying object');
+    }
+}
+
+const projectCompleteHandler = async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        const video_url = req.body.video_url;
+        const fileName = req.body.fileName;
+        const updatedProject = await prisma.project.update({
+            where: { id: projectId },
+            data: { status: 'COMPLETED', media: { create: { url: video_url, fileType: 'VIDEO', fileName } } }
+        });
+        res.status(200).json(updatedProject);
+    } catch (error) {
+        console.error('Error completing project:', error);
+        res.status(500).send('Error completing project');
+    }
+}
+
+const getCompletedProjectsHandler = async (req, res) => {
+    try {
+        const userId = req.user?.uid;
+        if (!userId) {
+            return res.status(400).send('User ID is required');
+        }
+        const projects = await getUserProjects(userId);
+        const completedProjects = projects.filter(project => project.status === 'COMPLETED').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        res.status(200).json(completedProjects);
+    } catch (error) {
+        console.error('Error fetching completed projects:', error);
+        res.status(500).send('Error fetching completed projects');
+    }
+};
+
+
 module.exports = {
     getActiveProjectsHandler,
     getProjectsHandler,
@@ -122,5 +178,9 @@ module.exports = {
     createProjectHandler,
     updateProjectHandler,
     deleteProjectHandler,
-    deleteObjectFromBucketHandler
+    deleteObjectFromBucketHandler,
+    deleteObjectUsingKey,
+    copyToKeyHandler,
+    projectCompleteHandler,
+    getCompletedProjectsHandler
 };

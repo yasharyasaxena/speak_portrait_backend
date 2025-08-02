@@ -42,9 +42,19 @@ const createProject = async (data) => {
 
 const updateProject = async (projectId, data) => {
     try {
+        const { media, ...projectData } = data;
         const updatedProject = await prisma.project.update({
             where: { id: projectId },
-            data
+            data: {
+                ...projectData,
+                media: {
+                    upsert: media.map(item => ({
+                        where: { id: item.id },
+                        create: item,
+                        update: item
+                    }))
+                }
+            }
         });
         return updatedProject;
     } catch (error) {
