@@ -26,3 +26,4 @@ dist-ssr
 *.sw?
 
 /src/generated/prisma
+/speakportrait-60e57-firebase-adminsdk-fbsvc-93fb48798e.json
