@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('../../speakportrait-60e57-firebase-adminsdk-fbsvc-dd0249b8af.json');
+const serviceAccount = require('../../speakportrait-60e57-firebase-adminsdk-fbsvc-93fb48798e.json');
 const { createOrUpdateUser } = require('../services/userServices');
 
 
